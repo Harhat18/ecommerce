@@ -6,7 +6,10 @@ const productModel = new Schema(
   {
     title: { type: String, required: true, unique: true },
     desc: { type: String, required: true },
-    image: { type: String, required: true },
+    image: {
+      type: String,
+      required: true,
+    },
     categories: { type: Array, default: [] },
     size: { type: String },
     color: { type: String },
@@ -17,4 +20,4 @@ const productModel = new Schema(
   }
 );
 
-export const User = mongoose.model('Product', productModel, 'product');
+export const Product = mongoose.model('Product', productModel, 'product');

@@ -19,4 +19,4 @@ const cartModel = new Schema(
   }
 );
 
-export const User = mongoose.model('Cart', cartModel, 'cart');
+export const Cart = mongoose.model('Cart', cartModel, 'cart');

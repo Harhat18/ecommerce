@@ -53,7 +53,7 @@ export const verifyAdmin = (
     if (req.user?.isAdmin) {
       next();
     } else {
-      res.status(403).send('User is not an Admin so User cant be deleted');
+      res.status(403).send('User is not an Admin');
     }
   });
 };
