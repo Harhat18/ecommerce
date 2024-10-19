@@ -47,10 +47,9 @@ export const getAdmin = async (req: Request, res: Response): Promise<void> => {
       res.status(404).send({ message: 'User cant be found' });
       return;
     }
-    const { password, ...info } = admin.toObject();
     res
       .status(200)
-      .send({ message: 'User has been found successfully', data: info });
+      .send({ message: 'User has been found successfully', admin });
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: 'User query failed', error });

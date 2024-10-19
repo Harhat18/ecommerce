@@ -1,16 +1,33 @@
 import { Server, Socket } from 'socket.io';
+import { User } from '../../models/user.model';
 
 export function setupEvents(io: Server): void {
-  io.on('connection', (socket: Socket) => {
-    console.log('Bağlandın => SocketID', socket.id);
+  io.on('connection', (socket) => {
+    const phoneNumber = socket.handshake.query.phoneNumber;
 
-    socket.on('send-location', (data) => {
-      io.emit('receive-locations', { id: socket.id, ...data });
-      console.log('data', socket.id, data);
-    });
-
+    if (phoneNumber) {
+      User.findOneAndUpdate(
+        { phoneNumber },
+        { socketId: socket.id },
+        { new: true }
+      )
+        .then((user) => {
+          if (user) {
+            console.log(
+              `${user.phoneNumber} kullanıcısı ${socket.id} ile bağlandı.`
+            );
+          } else {
+            console.log('Kullanıcı bulunamadı.');
+          }
+        })
+        .catch((error) => {
+          console.error('SocketId kaydedilirken hata oluştu:', error);
+        });
+    } else {
+      console.log('deviceId gönderilmedi.');
+    }
     socket.on('disconnect', () => {
-      console.log('Bir kullanıcı bağlantıyı kapattı');
+      console.log('Kullanıcı bağlantıyı kapattı');
     });
   });
 }

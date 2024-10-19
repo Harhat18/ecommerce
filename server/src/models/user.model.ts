@@ -4,10 +4,16 @@ const { Schema } = mongoose;
 
 const userModel = new Schema(
   {
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    phoneNumber: { type: String, required: true, unique: true },
+    deviceId: { type: String, required: true },
     isAdmin: { type: Boolean, default: false },
+    isPro: { type: Boolean, default: false },
+    isVerify: { type: Boolean, default: false },
+    verificationCode: { type: String },
+    verificationAttempts: { type: Number, default: 1 },
+    lastVerificationAttempt: { type: Date },
+    activeSessionToken: { type: String },
+    socketId: { type: String },
   },
   {
     timestamps: true,
