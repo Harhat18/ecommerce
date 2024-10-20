@@ -6,7 +6,11 @@ export function setupEvents(io: Server): void {
     const phoneNumber = socket.handshake.query.phoneNumber;
 
     if (phoneNumber) {
-      User.findOne({ phoneNumber })
+      User.findOneAndUpdate(
+        { phoneNumber },
+        { socketId: socket.id },
+        { new: true }
+      )
         .then((user) => {
           if (user) {
             console.log(

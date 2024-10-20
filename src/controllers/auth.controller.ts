@@ -3,6 +3,7 @@ import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { io } from '../..';
+import { setupEvents } from '../utils/socketConfig/setupEvents';
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -18,6 +19,7 @@ export const codeSend = async (req: Request, res: Response) => {
       const verificationCode = generateVerificationCode();
       newUser.verificationCode = verificationCode;
       newUser.lastVerificationAttempt = new Date();
+      setupEvents(io);
       await newUser.save();
       const token = jwt.sign(
         { userId: newUser._id, isAdmin: newUser.isAdmin },
@@ -76,12 +78,7 @@ export const verifyCode = async (req: Request, res: Response) => {
       return;
     }
     if (user && user.deviceId !== deviceId) {
-      console.log(user.socketId);
-      if (socketId && user.socketId && user.socketId !== '') {
-        io.to(user.socketId).emit('logout', {
-          message: 'Başka bir cihazdan giriş yapıldı',
-        });
-      }
+      setupEvents(io);
       user.socketId = socketId;
       user.deviceId = deviceId;
       await user.save();
