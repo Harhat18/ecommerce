@@ -51,7 +51,7 @@ export const codeSend = async (req: Request, res: Response) => {
     }
 
     const verificationCode = generateVerificationCode();
-
+    user.deviceId = deviceId;
     user.verificationCode = verificationCode;
     user.verificationAttempts += 1;
     user.lastVerificationAttempt = new Date();
