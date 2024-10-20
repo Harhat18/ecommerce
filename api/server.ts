@@ -42,6 +42,9 @@ export const io = new Server(server, {
 setupEvents(io);
 
 app.use('/', routes);
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
 
 const PORT = process.env.PORT || 3000;
 
