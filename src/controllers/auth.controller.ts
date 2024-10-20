@@ -68,13 +68,16 @@ export const verifyCode = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, code, deviceId, socketId } = req.body;
     const user = await User.findOne({ phoneNumber });
+    if (user && user.socketId) {
+      console.log(user.socketId);
+    }
     if (!user || user.verificationCode !== code) {
       res.status(400).json({ message: 'Geçersiz kod' });
       return;
     }
     if (user && user.deviceId !== deviceId) {
       console.log(user.socketId);
-      if (user.socketId) {
+      if (socketId && user.socketId && user.socketId !== '') {
         io.to(user.socketId).emit('logout', {
           message: 'Başka bir cihazdan giriş yapıldı',
         });

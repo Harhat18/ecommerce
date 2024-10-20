@@ -39,7 +39,6 @@ export const io = new Server(server, {
     origin: '*',
   },
 });
-setupEvents(io);
 
 app.use('/', routes);
 
