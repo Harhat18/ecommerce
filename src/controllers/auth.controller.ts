@@ -82,6 +82,7 @@ export const verifyCode = async (req: Request, res: Response) => {
         io.to(user.socketId).emit('logout', {
           message: 'Başka bir cihazdan giriş yapıldı',
         });
+        console.log('msj gitti');
       }
       setupEvents(io);
       user.deviceId = deviceId;
