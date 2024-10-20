@@ -1,4 +1,4 @@
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { User } from '../../models/user.model';
 
 export function setupEvents(io: Server): void {
