@@ -81,6 +81,7 @@ export const verifyCode = async (req: Request, res: Response) => {
       if (user.socketId) {
         io.emit('logout', {
           message: 'Başka bir cihazdan giriş yapıldı',
+          userId: user._id,
         });
         console.log('msj gitti');
       }
