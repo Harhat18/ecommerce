@@ -24,7 +24,7 @@ export function setupEvents(io: Server): void {
           console.error('SocketId kaydedilirken hata oluştu:', error);
         });
     } else {
-      console.log('deviceId gönderilmedi.');
+      console.log('telefon numarası gönderilmedi.');
     }
     socket.on('disconnect', () => {
       console.log('Kullanıcı bağlantıyı kapattı');

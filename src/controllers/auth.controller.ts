@@ -74,8 +74,10 @@ export const verifyCode = async (req: Request, res: Response) => {
     }
     if (user && user.deviceId !== deviceId) {
       if (user.socketId) {
-        io.to(user.socketId).emit('logout', {
-          message: 'Başka bir cihazdan giriş yapıldı',
+        io.on('connection', (socket) => {
+          socket.on('disconnect', () => {
+            console.log('Kullanıcı bağlantıyı kapattı');
+          });
         });
       }
       user.socketId = socketId;
