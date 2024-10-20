@@ -86,11 +86,15 @@ export const verifyCode = async (req: Request, res: Response) => {
       user.deviceId = deviceId;
       await user.save();
     } else if (!user) {
-      const newUser = new User({ phoneNumber, deviceId, socketId });
+      const newUser = new User({
+        phoneNumber,
+        deviceId,
+        socketId,
+        isVerify: true,
+      });
       await newUser.save();
     }
     user.verificationCode = null;
-    user.isVerify = true;
     res.status(200).json({ message: 'Kullanıcı kayıt edildi', user });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası', error });
