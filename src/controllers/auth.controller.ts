@@ -28,12 +28,6 @@ export const codeSend = async (req: Request, res: Response) => {
       return;
     }
 
-    if (user.deviceId !== deviceId) {
-      user.isVerify = false;
-      res.status(403).json({ message: "Cihaz ID'si uyuşmuyor." });
-      return;
-    }
-
     const currentTime = new Date();
     const timeSinceLastAttempt = user.lastVerificationAttempt
       ? currentTime.getTime() - user.lastVerificationAttempt.getTime()
