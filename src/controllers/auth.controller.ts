@@ -79,7 +79,6 @@ export const verifyCode = async (req: Request, res: Response) => {
     }
     if (user && user.deviceId !== deviceId) {
       setupEvents(io);
-      user.socketId = socketId;
       user.deviceId = deviceId;
       await user.save();
     } else if (!user) {
