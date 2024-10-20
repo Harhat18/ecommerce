@@ -69,7 +69,9 @@ export const codeSend = async (req: Request, res: Response) => {
 export const verifyCode = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, code, deviceId, socketId } = req.body;
+    console.log(phoneNumber, code, deviceId, socketId);
     const user = await User.findOne({ phoneNumber });
+    console.log('user', user);
     if (user && user.socketId) {
       console.log(user.socketId);
     }
@@ -79,9 +81,10 @@ export const verifyCode = async (req: Request, res: Response) => {
     }
     if (user && user.deviceId !== deviceId) {
       if (user.socketId) {
-        io.to(user.socketId).emit('logout', {
+        const msj = io.to(user.socketId).emit('logout', {
           message: 'Başka bir cihazdan giriş yapıldı',
         });
+        await msj;
         console.log('msj gitti');
       }
       setupEvents(io);
