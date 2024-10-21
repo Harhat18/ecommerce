@@ -68,15 +68,17 @@ export const verifyCode = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, code, deviceId, socketId } = req.body;
     const user = await User.findOne({ phoneNumber });
-    if (user && user.socketId) {
-      console.log(user.socketId);
-    }
+    console.log(user);
     if (!user || user.verificationCode !== code) {
       res.status(400).json({ message: 'Geçersiz kod' });
       return;
     }
-    if (user && user.deviceId !== deviceId) {
+    if (user.deviceId !== deviceId) {
+      console.log('user.deviceId', user.deviceId);
+      console.log('deviceId', deviceId);
       if (user.socketId) {
+        console.log('user.socketId', user.socketId);
+        console.log('socketId', socketId);
         io.to(user.socketId).emit('deviceChange', {
           message: 'Uygulama başka bir cihazda açıldı.',
         });
@@ -87,6 +89,8 @@ export const verifyCode = async (req: Request, res: Response) => {
       user.verificationCode = null;
       await user.save();
     }
+    console.log('buradasın');
+
     user.deviceId = deviceId;
     user.verificationCode = null;
     user.socketId = socketId;
