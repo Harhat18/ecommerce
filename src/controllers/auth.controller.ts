@@ -3,7 +3,6 @@ import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { io } from '../..';
-import { setupEvents } from '../utils/socketConfig/setupEvents';
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -19,7 +18,7 @@ export const codeSend = async (req: Request, res: Response) => {
       const verificationCode = generateVerificationCode();
       newUser.verificationCode = verificationCode;
       newUser.lastVerificationAttempt = new Date();
-      setupEvents(io);
+
       await newUser.save();
       const token = jwt.sign(
         { userId: newUser._id, isAdmin: newUser.isAdmin },
