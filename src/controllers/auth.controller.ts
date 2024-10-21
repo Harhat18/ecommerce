@@ -68,6 +68,10 @@ export const verifyCode = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, code, deviceId, socketId } = req.body;
     const user = await User.findOne({ phoneNumber });
+    if (user) {
+      console.log('user.socketId', user.socketId);
+      console.log('socketId', socketId);
+    }
     console.log(user);
     if (!user || user.verificationCode !== code) {
       res.status(400).json({ message: 'Geçersiz kod' });
