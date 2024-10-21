@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { User } from '../models/user.model';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { io } from '../..';
 import { setupEvents } from '../utils/socketConfig/setupEvents';
@@ -19,7 +18,6 @@ export const codeSend = async (req: Request, res: Response) => {
       const verificationCode = generateVerificationCode();
       newUser.verificationCode = verificationCode;
       newUser.lastVerificationAttempt = new Date();
-      setupEvents(io);
       await newUser.save();
       const token = jwt.sign(
         { userId: newUser._id, isAdmin: newUser.isAdmin },
@@ -89,7 +87,9 @@ export const verifyCode = async (req: Request, res: Response) => {
       user.verificationCode = null;
       await user.save();
     }
+    user.deviceId = deviceId;
     user.verificationCode = null;
+    user.socketId = socketId;
     user.isVerify = true;
     await user.save();
     res.status(200).json({ message: 'Kullanıcı kayıt edildi', user });
