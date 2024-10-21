@@ -64,7 +64,7 @@ export const codeSend = async (req: Request, res: Response) => {
 };
 export const verifyCode = async (req: Request, res: Response) => {
   try {
-    const { phoneNumber, code, deviceId, socketId } = req.body;
+    const { phoneNumber, code, deviceId, socketId } = await req.body;
     const user = await User.findOne({ phoneNumber });
     console.log('user eski ', user);
     console.log('deviceId eski ', user?.deviceId);
@@ -78,6 +78,8 @@ export const verifyCode = async (req: Request, res: Response) => {
       console.log('devicelar eşit değil');
 
       if (user.socketId) {
+        console.log('içerdesin');
+        console.log(user.socketId);
         io.to(user.socketId).emit('deviceChange', {
           message: 'Uygulama başka bir cihazda açıldı.',
         });
