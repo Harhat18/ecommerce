@@ -3,6 +3,7 @@ import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { io } from '../..';
+import { setupEvents } from '../utils/socketConfig/setupEvents';
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -18,7 +19,7 @@ export const codeSend = async (req: Request, res: Response) => {
       const verificationCode = generateVerificationCode();
       newUser.verificationCode = verificationCode;
       newUser.lastVerificationAttempt = new Date();
-
+      setupEvents(io);
       await newUser.save();
       const token = jwt.sign(
         { userId: newUser._id, isAdmin: newUser.isAdmin },
@@ -69,11 +70,13 @@ export const verifyCode = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, code, deviceId, socketId } = req.body;
     const user = await User.findOne({ phoneNumber });
-
-    if (!user || user.verificationCode !== code) {
-      return res.status(400).json({ message: 'Geçersiz kod' });
+    if (user && user.socketId) {
+      console.log(user.socketId);
     }
-
+    if (!user || user.verificationCode !== code) {
+      res.status(400).json({ message: 'Geçersiz kod' });
+      return;
+    }
     if (user && user.deviceId !== deviceId) {
       if (user.socketId) {
         io.to(user.socketId).emit('deviceChange', {
@@ -86,13 +89,10 @@ export const verifyCode = async (req: Request, res: Response) => {
       user.verificationCode = null;
       await user.save();
     }
-    if (user) {
-      user.verificationCode = null;
-      user.isVerify = true;
-      await user.save();
-    }
-
-    res.status(200).json({ message: 'Kullanıcı doğrulandı', user });
+    user.verificationCode = null;
+    user.isVerify = true;
+    await user.save();
+    res.status(200).json({ message: 'Kullanıcı kayıt edildi', user });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası', error });
   }
