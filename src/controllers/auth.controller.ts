@@ -86,9 +86,9 @@ export const verifyCode = async (req: Request, res: Response) => {
         io.to(user.socketId).emit('deviceChange', {
           message: 'Uygulama başka bir cihazda açıldı.',
         });
-        io.emit('deviceChange', {
-          message: 'Uygulama başka bir cihazda açıldı.',
-        });
+        // io.emit('deviceChange', {
+        //   message: 'Uygulama başka bir cihazda açıldı.',
+        // });
         user.deviceId = deviceId;
         user.socketId = socketId;
         user.isVerify = true;
