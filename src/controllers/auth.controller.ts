@@ -69,6 +69,9 @@ export const verifyCode = async (req: Request, res: Response) => {
     console.log('user eski ', user);
     console.log('deviceId eski ', user?.deviceId);
     console.log('deviceId yeni ', deviceId);
+    console.log('socketId yeni ', socketId);
+    if (user && user.socketId)
+      console.log('user.socketId yeni ', user.socketId);
 
     if (!user || user.verificationCode !== code) {
       res.status(400).json({ message: 'Geçersiz kod' });
@@ -81,6 +84,9 @@ export const verifyCode = async (req: Request, res: Response) => {
         console.log('içerdesin');
         console.log(user.socketId);
         io.to(user.socketId).emit('deviceChange', {
+          message: 'Uygulama başka bir cihazda açıldı.',
+        });
+        io.emit('deviceChange', {
           message: 'Uygulama başka bir cihazda açıldı.',
         });
         user.deviceId = deviceId;
