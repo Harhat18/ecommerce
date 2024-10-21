@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { User } from '../models/user.model';
 import jwt from 'jsonwebtoken';
 import { io } from '../..';
-import { setupEvents } from '../utils/socketConfig/setupEvents';
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -49,7 +48,6 @@ export const codeSend = async (req: Request, res: Response) => {
     }
 
     const verificationCode = generateVerificationCode();
-    user.deviceId = deviceId;
     user.verificationCode = verificationCode;
     user.verificationAttempts += 1;
     user.lastVerificationAttempt = new Date();
@@ -68,13 +66,6 @@ export const verifyCode = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, code, deviceId, socketId } = req.body;
     const user = await User.findOne({ phoneNumber });
-    if (user) {
-      console.log('user.deviceIdEski', user.deviceId);
-      console.log('deviceId', deviceId);
-
-      console.log('user.socketIdEski', user.socketId);
-      console.log('socketId', socketId);
-    }
 
     if (!user || user.verificationCode !== code) {
       res.status(400).json({ message: 'Geçersiz kod' });
@@ -91,14 +82,12 @@ export const verifyCode = async (req: Request, res: Response) => {
         user.socketId = socketId;
         user.isVerify = true;
         user.verificationCode = null;
-        await user.save();
+        user.save();
       }
     } else {
-      user.deviceId = deviceId;
       user.socketId = socketId;
       user.verificationCode = null;
-      user.isVerify = true;
-      await user.save();
+      user.save();
     }
 
     console.log('buradasın');
