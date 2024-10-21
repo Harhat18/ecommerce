@@ -69,10 +69,11 @@ export const verifyCode = async (req: Request, res: Response) => {
     const { phoneNumber, code, deviceId, socketId } = req.body;
     const user = await User.findOne({ phoneNumber });
     if (user) {
+      console.log('user.deviceIdEski', user.deviceId);
       console.log('deviceId', deviceId);
-      console.log('user.deviceId', user.deviceId);
-      console.log('user.socketId1', user.socketId);
-      console.log('socketId1', socketId);
+
+      console.log('user.socketIdEski', user.socketId);
+      console.log('socketId', socketId);
     }
     console.log(user);
     if (!user || user.verificationCode !== code) {
@@ -80,27 +81,27 @@ export const verifyCode = async (req: Request, res: Response) => {
       return;
     }
     if (user.deviceId !== deviceId) {
-      console.log('user.deviceId2', user.deviceId);
-      console.log('deviceId2', deviceId);
+      console.log('devicelar eşit değil');
+
       if (user.socketId) {
-        console.log('user.socketId3', user.socketId);
-        console.log('socketId3', socketId);
         io.to(user.socketId).emit('deviceChange', {
           message: 'Uygulama başka bir cihazda açıldı.',
         });
+        user.deviceId = deviceId;
+        user.socketId = socketId;
+        user.isVerify = true;
+        user.verificationCode = null;
+        await user.save();
       }
+    } else {
       user.deviceId = deviceId;
       user.socketId = socketId;
-      user.isVerify = true;
       user.verificationCode = null;
-      await user.save();
+      user.isVerify = true;
     }
+
     console.log('buradasın');
 
-    user.deviceId = deviceId;
-    user.verificationCode = null;
-    user.socketId = socketId;
-    user.isVerify = true;
     await user.save();
     res.status(200).json({ message: 'Kullanıcı kayıt edildi', user });
   } catch (error) {
