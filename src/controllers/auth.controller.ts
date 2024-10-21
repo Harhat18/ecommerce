@@ -82,12 +82,12 @@ export const verifyCode = async (req: Request, res: Response) => {
         user.socketId = socketId;
         user.isVerify = true;
         user.verificationCode = null;
-        user.save();
+        await user.save();
       }
     } else {
       user.socketId = socketId;
       user.verificationCode = null;
-      user.save();
+      await user.save();
     }
 
     console.log('buradasın');
