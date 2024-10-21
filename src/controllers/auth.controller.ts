@@ -75,7 +75,7 @@ export const verifyCode = async (req: Request, res: Response) => {
       console.log('user.socketIdEski', user.socketId);
       console.log('socketId', socketId);
     }
-    console.log(user);
+
     if (!user || user.verificationCode !== code) {
       res.status(400).json({ message: 'Geçersiz kod' });
       return;
@@ -98,11 +98,11 @@ export const verifyCode = async (req: Request, res: Response) => {
       user.socketId = socketId;
       user.verificationCode = null;
       user.isVerify = true;
+      await user.save();
     }
 
     console.log('buradasın');
-
-    await user.save();
+    console.log(user);
     res.status(200).json({ message: 'Kullanıcı kayıt edildi', user });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası', error });
