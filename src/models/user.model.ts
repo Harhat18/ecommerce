@@ -14,6 +14,7 @@ const userModel = new Schema(
     lastVerificationAttempt: { type: Date },
     activeSessionToken: { type: String },
     socketId: { type: String },
+    token: { type: String },
   },
   {
     timestamps: true,

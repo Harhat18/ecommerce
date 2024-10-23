@@ -1,8 +1,9 @@
 import jwt, { verify } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
+import { User } from '../models/user.model';
 
 interface UserPayload {
-  userId: string;
+  phoneNumber: string;
   isAdmin: boolean;
   iat: number;
   exp: number;
@@ -16,15 +17,20 @@ declare global {
   }
 }
 
-export const verifyToken = (
+export const verifyToken = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+) => {
+  console.log('req', req.body);
+  const user = await User.findOne({ phoneNumber: req.body.phoneNumber });
+
+  console.log('user?.token', user?.token);
+
   const authHeader = req.headers['authorization'] as string | undefined;
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) {
+  if (!token || user?.token !== token) {
     res.status(401).send('Access Denied');
     return;
   }
@@ -34,6 +40,7 @@ export const verifyToken = (
 
     if (typeof verified !== 'string') {
       req.user = verified as UserPayload;
+      console.log('req', req.user);
       next();
     } else {
       res.status(400).send('Invalid Token');
@@ -43,7 +50,6 @@ export const verifyToken = (
     res.status(400).send('Invalid Token');
   }
 };
-
 export const verifyAdmin = (
   req: Request,
   res: Response,

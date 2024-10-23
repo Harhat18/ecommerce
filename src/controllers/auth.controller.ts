@@ -8,25 +8,25 @@ const generateVerificationCode = (): string => {
 };
 export const codeSend = async (req: Request, res: Response) => {
   try {
-    const { phoneNumber, deviceId, socketId } = req.body;
-
+    const { phoneNumber, deviceId, isAdmin } = req.body;
     let user = await User.findOne({ phoneNumber });
 
     if (!user) {
-      const newUser = new User({ phoneNumber, deviceId, socketId });
+      const newUser = new User({ phoneNumber, deviceId, isAdmin });
+      const token = jwt.sign(
+        { phoneNumber: phoneNumber, isAdmin: isAdmin },
+        process.env.JWT_SECRET as string
+      );
       const verificationCode = generateVerificationCode();
       newUser.verificationCode = verificationCode;
       newUser.lastVerificationAttempt = new Date();
+      newUser.token = token;
       await newUser.save();
-      const token = jwt.sign(
-        { userId: newUser._id, isAdmin: newUser.isAdmin },
-        process.env.JWT_SECRET as string
-      );
+
       console.log(`Yeni kullanici kodu: ${verificationCode}`);
       res.status(201).json({ message: 'Kod gönderildi', user: newUser, token });
       return;
     }
-
     const currentTime = new Date();
     const timeSinceLastAttempt = user.lastVerificationAttempt
       ? currentTime.getTime() - user.lastVerificationAttempt.getTime()
@@ -42,20 +42,21 @@ export const codeSend = async (req: Request, res: Response) => {
       });
       return;
     }
-
     if (timeSinceLastAttempt >= 60000) {
       user.verificationAttempts = 0;
     }
-
+    const token = jwt.sign(
+      { phoneNumber: user.phoneNumber, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET as string
+    );
     const verificationCode = generateVerificationCode();
     user.verificationCode = verificationCode;
     user.verificationAttempts += 1;
     user.lastVerificationAttempt = new Date();
+    user.isAdmin = isAdmin;
+    user.token = token;
     await user.save();
-    const token = jwt.sign(
-      { userId: user._id, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET as string
-    );
+
     console.log(`Kullanici kodu: ${verificationCode}`);
     res.status(200).json({ message: 'Kod gönderildi', user, token });
   } catch (error) {
@@ -66,29 +67,15 @@ export const verifyCode = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, code, deviceId, socketId } = await req.body;
     const user = await User.findOne({ phoneNumber });
-    console.log('user eski ', user);
-    console.log('deviceId eski ', user?.deviceId);
-    console.log('deviceId yeni ', deviceId);
-    console.log('socketId yeni ', socketId);
-    if (user && user.socketId)
-      console.log('user.socketId yeni ', user.socketId);
-
     if (!user || user.verificationCode !== code) {
-      res.status(400).json({ message: 'Geçersiz kod' });
+      res.status(200).json({ message: 'Geçersiz kod' });
       return;
     }
     if (user.deviceId !== deviceId) {
-      console.log('devicelar eşit değil');
-
       if (user.socketId) {
-        console.log('içerdesin');
-        console.log(user.socketId);
         io.to(user.socketId).emit('deviceChange', {
           message: 'Uygulama başka bir cihazda açıldı.',
         });
-        // io.emit('deviceChange', {
-        //   message: 'Uygulama başka bir cihazda açıldı.',
-        // });
         user.deviceId = deviceId;
         user.socketId = socketId;
         user.isVerify = true;
@@ -102,9 +89,6 @@ export const verifyCode = async (req: Request, res: Response) => {
       user.isVerify = true;
       await user.save();
     }
-
-    console.log('buradasın');
-    console.log(user);
     res.status(200).json({ message: 'Kullanıcı kayıt edildi', user });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası', error });

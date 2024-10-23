@@ -10,13 +10,10 @@ import {
 
 const router = express.Router();
 
-router.get('/getusers', (req, res) => {
-  res.send('user has been gotten');
-});
 router.put('/update/:id', verifyToken, updateUser);
-router.delete('/delete/:id', verifyAdmin, deleteUser);
-router.get('/getadmin/:id', verifyAdmin, getAdmin);
-router.get('/', verifyToken, getAllUsers);
+router.delete('/delete/:id', verifyToken, deleteUser);
+router.get('/getadmin/:id', verifyToken, getAdmin);
+router.get('/', verifyAdmin, getAllUsers);
 router.get('/stats', verifyAdmin, getUserStat);
 
 export default router;

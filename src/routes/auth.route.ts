@@ -5,7 +5,6 @@ import { verifyToken } from '../middleware/verifyToken';
 const router = express.Router();
 
 router.post('/codeSend', codeSend);
-
 router.post('/verifyCode', verifyToken, verifyCode);
 
 export default router;
