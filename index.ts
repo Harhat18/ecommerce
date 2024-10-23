@@ -42,10 +42,6 @@ export const io = new Server(server, {
 
 app.use('/', routes);
 
-app.get('/', (req, res) => {
-  res.send('Hello from Express.js API on Vercel!');
-});
-
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {

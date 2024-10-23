@@ -1,9 +1,14 @@
 import { Request, Response } from 'express';
 
 import { User } from '../models/user.model';
-import { ConnectionRequest } from '../models/ConnectionRequest.model';
+import { ConnectionRequest } from '../models/connection.model';
+import { io } from '../..';
+import { Document } from 'mongoose';
 
-export const sendConnectionRequest = async (req: Request, res: Response) => {
+export const sendConnectionRequest = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { senderPhoneNumber, receiverPhoneNumber } = req.body;
 
@@ -11,7 +16,8 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
     const receiver = await User.findOne({ phoneNumber: receiverPhoneNumber });
 
     if (!sender || !receiver) {
-      return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+      res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+      return;
     }
 
     const existingRequest = await ConnectionRequest.findOne({
@@ -19,7 +25,8 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
       receiver: receiver._id,
     });
     if (existingRequest) {
-      return res.status(400).json({ message: 'Zaten bir istek gönderdiniz' });
+      res.status(400).json({ message: 'Zaten bir istek gönderdiniz' });
+      return;
     }
 
     const newRequest = new ConnectionRequest({
@@ -28,6 +35,11 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
     });
 
     await newRequest.save();
+    if (receiver?.socketId)
+      io.to(receiver?.socketId).emit('connectionRequest', {
+        message: 'Yeni bağlantı isteği aldınız',
+        request: newRequest,
+      });
     res
       .status(201)
       .json({ message: 'Bağlantı isteği gönderildi', request: newRequest });
@@ -36,24 +48,47 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
   }
 };
 
-export const respondToRequest = async (req: Request, res: Response) => {
+export const respondToRequest = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    const { requestId, action } = req.body; // 'accept' or 'reject'
+    const { requestId, action } = req.body;
 
-    const request = await ConnectionRequest.findById(requestId);
+    const request = await ConnectionRequest.findById(requestId)
+      .populate('sender')
+      .populate('receiver');
     if (!request) {
-      return res.status(404).json({ message: 'İstek bulunamadı' });
+      res.status(404).json({ message: 'İstek bulunamadı' });
+      return;
     }
+    const sender = request.sender as any;
+    const receiver = request.receiver as any;
 
     if (action === 'accept') {
       request.status = 'accepted';
     } else if (action === 'reject') {
       request.status = 'rejected';
     } else {
-      return res.status(400).json({ message: 'Geçersiz işlem' });
+      res.status(400).json({ message: 'Geçersiz işlem' });
+      return;
     }
 
     await request.save();
+    if (sender?.socketId) {
+      io.to(sender.socketId).emit('requestResponse', {
+        message: `Bağlantı isteğiniz ${request.status} edildi`,
+        request,
+      });
+    }
+
+    if (receiver?.socketId) {
+      io.to(receiver.socketId).emit('requestResponse', {
+        message: `Bir bağlantı isteğini ${request.status} ettiniz`,
+        request,
+      });
+    }
+
     res
       .status(200)
       .json({ message: `İstek ${request.status} edildi`, request });
@@ -62,13 +97,17 @@ export const respondToRequest = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteConnection = async (req: Request, res: Response) => {
+export const deleteConnection = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { connectionId } = req.body;
 
     const connection = await ConnectionRequest.findById(connectionId);
     if (!connection) {
-      return res.status(404).json({ message: 'Bağlantı bulunamadı' });
+      res.status(404).json({ message: 'Bağlantı bulunamadı' });
+      return;
     }
 
     await ConnectionRequest.findByIdAndDelete(connectionId);
