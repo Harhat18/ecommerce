@@ -2,13 +2,6 @@ import { Request, Response } from 'express';
 import { User } from '../models/user.model';
 import jwt from 'jsonwebtoken';
 import { io } from '../..';
-import twilio from 'twilio';
-
-const accountSid = process.env.TWILIO_ACCOUNT_SID as string;
-const authToken = process.env.TWILIO_AUTH_TOKEN as string;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER as string;
-
-const client = twilio(accountSid, authToken);
 
 const generateVerificationCode = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -17,7 +10,6 @@ export const codeSend = async (req: Request, res: Response) => {
   try {
     const { phoneNumber, deviceId, isAdmin } = req.body;
     let user = await User.findOne({ phoneNumber });
-    console.log('phoneNumber', phoneNumber);
 
     if (!user) {
       const newUser = new User({ phoneNumber, deviceId, isAdmin });
@@ -32,13 +24,6 @@ export const codeSend = async (req: Request, res: Response) => {
       await newUser.save();
 
       console.log(`Yeni kullanici kodu: ${verificationCode}`);
-
-      await client.messages.create({
-        body: `Doğrulama kodunuz: ${verificationCode}`,
-        from: twilioPhoneNumber,
-        to: phoneNumber,
-      });
-
       res.status(201).json({ message: 'Kod gönderildi', user: newUser, token });
       return;
     }
@@ -72,11 +57,7 @@ export const codeSend = async (req: Request, res: Response) => {
     user.token = token;
     await user.save();
 
-    await client.messages.create({
-      body: `Appman Doğrulama kodunuz: ${verificationCode}`,
-      from: twilioPhoneNumber,
-      to: phoneNumber,
-    });
+    console.log(`Kullanici kodu: ${verificationCode}`);
     res.status(200).json({ message: 'Kod gönderildi', user, token });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası', error });

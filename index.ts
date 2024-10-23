@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import http from 'http';
 import morgan from 'morgan';
+import dotenv from 'dotenv';
 
 const app = express();
 app.use(express.json());
