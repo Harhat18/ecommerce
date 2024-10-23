@@ -22,10 +22,7 @@ export const verifyToken = async (
   res: Response,
   next: NextFunction
 ) => {
-  console.log('req', req.body);
   const user = await User.findOne({ phoneNumber: req.body.phoneNumber });
-
-  console.log('user?.token', user?.token);
 
   const authHeader = req.headers['authorization'] as string | undefined;
   const token = authHeader && authHeader.split(' ')[1];
@@ -40,7 +37,6 @@ export const verifyToken = async (
 
     if (typeof verified !== 'string') {
       req.user = verified as UserPayload;
-      console.log('req', req.user);
       next();
     } else {
       res.status(400).send('Invalid Token');

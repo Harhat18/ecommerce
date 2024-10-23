@@ -3,7 +3,6 @@ import routes from './src/routes/routes';
 
 import { Server } from 'socket.io';
 import { dbConnect } from './src/dbConnect/dbConnection';
-import { setupEvents } from './src/utils/socketConfig/setupEvents';
 
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
