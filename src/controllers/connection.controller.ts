@@ -19,6 +19,13 @@ export const sendConnectionRequest = async (
       return;
     }
 
+    if (senderPhoneNumber == receiverPhoneNumber) {
+      res
+        .status(200)
+        .json({ errMessage: 'Kendinize bağlantı isteği yollayamazsınız' });
+      return;
+    }
+
     const existingRequest = await ConnectionRequest.findOne({
       sender: sender._id,
       receiver: receiver._id,
@@ -108,12 +115,12 @@ export const deleteConnection = async (
 
     const connection = await ConnectionRequest.findById(connectionId);
     if (!connection) {
-      res.status(404).json({ errMessage: 'Bağlantı bulunamadı' });
+      res.status(200).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
     await ConnectionRequest.findByIdAndDelete(connectionId);
-    res.status(200).json({ message: 'Bağlantı silindi' });
+    res.status(201).json({ message: 'Bağlantı silindi' });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
