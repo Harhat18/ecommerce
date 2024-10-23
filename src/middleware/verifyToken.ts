@@ -27,7 +27,7 @@ export const verifyToken = async (
   const authHeader = req.headers['authorization'] as string | undefined;
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token || user?.token !== token) {
+  if (!token || (user?.isAdmin && user?.token !== token)) {
     res.status(401).send('Access Denied');
     return;
   }

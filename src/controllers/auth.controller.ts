@@ -68,7 +68,7 @@ export const verifyCode = async (req: Request, res: Response) => {
     const { phoneNumber, code, deviceId, socketId } = await req.body;
     const user = await User.findOne({ phoneNumber });
     if (!user || user.verificationCode !== code) {
-      res.status(200).json({ message: 'Geçersiz kod' });
+      res.status(204).json({ message: 'Geçersiz kod' });
       return;
     }
     if (user.deviceId !== deviceId) {
@@ -89,7 +89,7 @@ export const verifyCode = async (req: Request, res: Response) => {
       user.isVerify = true;
       await user.save();
     }
-    res.status(200).json({ message: 'Kullanıcı kayıt edildi', user });
+    res.status(201).json({ message: 'Kullanıcı kayıt edildi', user });
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası', error });
   }
