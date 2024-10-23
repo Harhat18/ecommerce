@@ -34,6 +34,7 @@ export const sendConnectionRequest = async (
     });
 
     await newRequest.save();
+
     console.log('receiver?.socketId', receiver?.socketId);
 
     if (receiver?.socketId)
