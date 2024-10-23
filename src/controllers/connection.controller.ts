@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
 import { io } from '../..';
-import { Document } from 'mongoose';
 
 export const sendConnectionRequest = async (
   req: Request,
@@ -35,6 +34,8 @@ export const sendConnectionRequest = async (
     });
 
     await newRequest.save();
+    console.log('receiver?.socketId', receiver?.socketId);
+
     if (receiver?.socketId)
       io.to(receiver?.socketId).emit('connectionRequest', {
         message: 'Yeni bağlantı isteği aldınız',

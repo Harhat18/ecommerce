@@ -90,6 +90,7 @@ export const verifyCode = async (req: Request, res: Response) => {
       await user.save();
     }
     res.status(201).json({ message: 'Kullanıcı kayıt edildi', user });
+    return;
   } catch (error) {
     res.status(500).json({ message: 'Sunucu hatası', error });
   }
