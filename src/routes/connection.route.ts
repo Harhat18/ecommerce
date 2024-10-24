@@ -5,6 +5,7 @@ import {
   deleteConnection,
   getConnectionRequests,
   getSentConnection,
+  getUserConnections,
   respondToRequest,
   sendConnectionRequest,
 } from '../controllers/connection.controller';
@@ -20,5 +21,6 @@ router.get(
   verifyToken,
   getConnectionRequests
 );
+router.post('/getUserConnections', verifyToken, getUserConnections);
 
 export default router;

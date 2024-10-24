@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
 import { io } from '../..';
+import { MyConnection } from '../models/myConnections.model';
 
 export const sendConnectionRequest = async (
   req: Request,
@@ -69,29 +70,69 @@ export const respondToRequest = async (
     const request = await ConnectionRequest.findById(requestId)
       .populate('sender', 'phoneNumber')
       .populate('receiver', 'phoneNumber');
+
     if (!request) {
       res.status(404).json({ errMessage: 'İstek bulunamadı' });
       return;
     }
+
     const sender = request.sender as any;
     const receiver = request.receiver as any;
 
     if (action === 'accept') {
-      request.status = 'accepted';
-      await request.save();
-      res
-        .status(200)
-        .json({ message: `İstek ${request.status} edildi`, request });
+      // Gönderici ve alıcı için bağlantı listelerini bul
+      let senderConnections = await MyConnection.findOne({ user: sender._id });
+      let receiverConnections = await MyConnection.findOne({
+        user: receiver._id,
+      });
+
+      // Eğer senderConnections yoksa, yeni bir doküman oluştur
+      if (!senderConnections) {
+        senderConnections = new MyConnection({
+          user: sender._id,
+          connections: [],
+        });
+      }
+      // Eğer receiverConnections yoksa, yeni bir doküman oluştur
+      if (!receiverConnections) {
+        receiverConnections = new MyConnection({
+          user: receiver._id,
+          connections: [],
+        });
+      }
+      // Bağlantı sayısı kontrolü (8 adet ile sınırlı)
+      if (
+        senderConnections.connections.length >= 8 ||
+        receiverConnections.connections.length >= 8
+      ) {
+        res.status(400).json({ errMessage: 'Bağlantı sınırına ulaşıldı' });
+        return;
+      }
+
+      senderConnections.connections.push(receiver._id);
+      receiverConnections.connections.push(sender._id);
+
+      await senderConnections.save();
+      await receiverConnections.save();
+
+      await ConnectionRequest.findByIdAndDelete(requestId);
+
+      res.status(200).json({
+        message:
+          'Bağlantı kabul edildi ve her iki kullanıcının bağlantılarına eklendi',
+        connections: {
+          sender: senderConnections.connections,
+          receiver: receiverConnections.connections,
+        },
+      });
     } else if (action === 'reject') {
-      request.status = 'rejected';
       await ConnectionRequest.findByIdAndDelete(requestId);
       res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
-      return;
     } else {
       res.status(400).json({ errMessage: 'Geçersiz işlem' });
-      return;
     }
 
+    // Socket Bildirimleri
     if (sender?.socketId) {
       io.to(sender.socketId).emit('requestResponse', {
         message: `Bağlantı isteğiniz ${
@@ -191,6 +232,33 @@ export const deleteConnection = async (
 
     await ConnectionRequest.findByIdAndDelete(connectionId);
     res.status(201).json({ message: 'Bağlantı silindi' });
+  } catch (error) {
+    res.status(500).json({ errMessage: 'Sunucu hatası', error });
+  }
+};
+
+export const getUserConnections = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    const userConnections = await MyConnection.findOne({
+      user: userId,
+    }).populate('connections', 'phoneNumber');
+
+    if (!userConnections) {
+      res
+        .status(404)
+        .json({ errMessage: 'Kullanıcının bağlantısı bulunamadı' });
+      return;
+    }
+
+    res.status(200).json({
+      message: 'Kullanıcının bağlantıları',
+      connections: userConnections.connections,
+    });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
