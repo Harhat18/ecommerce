@@ -65,8 +65,8 @@ export const respondToRequest = async (
     const { requestId, action } = req.body;
 
     const request = await ConnectionRequest.findById(requestId)
-      .populate('sender')
-      .populate('receiver');
+      .populate('sender', 'phoneNumber')
+      .populate('receiver', 'phoneNumber');
     if (!request) {
       res.status(404).json({ errMessage: 'İstek bulunamadı' });
       return;
