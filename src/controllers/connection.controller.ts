@@ -106,6 +106,34 @@ export const respondToRequest = async (
   }
 };
 
+export const getConnectionRequests = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { phoneNumber } = req.params;
+
+    const user = await User.findOne({ phoneNumber });
+    if (!user) {
+      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
+      return;
+    }
+
+    const requests = await ConnectionRequest.find({ receiver: user._id })
+      .populate('sender', 'phoneNumber')
+      .exec();
+
+    if (requests.length === 0) {
+      res.status(200).json({ message: 'Bağlantı isteği bulunamadı' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Bağlantı istekleri', requests });
+  } catch (error) {
+    res.status(500).json({ errMessage: 'Sunucu hatası', error });
+  }
+};
+
 export const deleteConnection = async (
   req: Request,
   res: Response
