@@ -31,7 +31,9 @@ export const sendConnectionRequest = async (
       receiver: receiver._id,
     });
     if (existingRequest) {
-      res.status(200).json({ errMessage: 'Zaten bir istek gönderdiniz' });
+      res
+        .status(200)
+        .json({ errMessage: 'Zaten bir istek gönderdiniz', existingRequest });
       return;
     }
 
@@ -76,32 +78,37 @@ export const respondToRequest = async (
 
     if (action === 'accept') {
       request.status = 'accepted';
+      await request.save();
+      res
+        .status(200)
+        .json({ message: `İstek ${request.status} edildi`, request });
     } else if (action === 'reject') {
       request.status = 'rejected';
+      await ConnectionRequest.findByIdAndDelete(requestId);
+      res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
+      return;
     } else {
       res.status(400).json({ errMessage: 'Geçersiz işlem' });
       return;
     }
 
-    await request.save();
-
     if (sender?.socketId) {
       io.to(sender.socketId).emit('requestResponse', {
-        message: `Bağlantı isteğiniz ${request.status} edildi`,
+        message: `Bağlantı isteğiniz ${
+          action === 'accept' ? 'kabul' : 'reddedildi'
+        } edildi`,
         request,
       });
     }
 
     if (receiver?.socketId) {
       io.to(receiver.socketId).emit('requestResponse', {
-        message: `Bir bağlantı isteğini ${request.status} ettiniz`,
+        message: `Bir bağlantı isteğini ${
+          action === 'accept' ? 'kabul' : 'reddettiniz'
+        }`,
         request,
       });
     }
-
-    res
-      .status(200)
-      .json({ message: `İstek ${request.status} edildi`, request });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
@@ -129,7 +136,41 @@ export const getConnectionRequests = async (
       return;
     }
 
-    res.status(200).json({ message: 'Bağlantı istekleri', requests });
+    res
+      .status(200)
+      .json({ message: 'Bana Yapılan Bağlantı istekleri', requests });
+  } catch (error) {
+    res.status(500).json({ errMessage: 'Sunucu hatası', error });
+  }
+};
+
+export const getSentConnection = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { phoneNumber } = req.params;
+
+    const user = await User.findOne({ phoneNumber });
+    if (!user) {
+      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
+      return;
+    }
+
+    const requests = await ConnectionRequest.find({ sender: user._id })
+      .populate('receiver', 'phoneNumber')
+      .exec();
+
+    if (requests.length === 0) {
+      res
+        .status(200)
+        .json({ message: 'Gönderilen bağlantı isteği bulunamadı' });
+      return;
+    }
+
+    res
+      .status(200)
+      .json({ message: 'Gönderilen bağlantı istekleri', requests });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
