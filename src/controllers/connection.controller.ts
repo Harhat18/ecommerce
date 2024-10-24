@@ -84,6 +84,7 @@ export const respondToRequest = async (
     }
 
     await request.save();
+
     if (sender?.socketId) {
       io.to(sender.socketId).emit('requestResponse', {
         message: `Bağlantı isteğiniz ${request.status} edildi`,
