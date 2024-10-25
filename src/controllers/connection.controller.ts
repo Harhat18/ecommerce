@@ -28,6 +28,17 @@ export const sendConnectionRequest = async (
       return;
     }
 
+    const existingConnection = await MyConnection.findOne({
+      user: sender._id,
+      connections: receiver._id,
+    });
+    if (existingConnection) {
+      res
+        .status(200)
+        .json({ errMessage: 'Bu kullanıcıyla zaten bağlantılısınız' });
+      return;
+    }
+
     const existingRequest = await ConnectionRequest.findOne({
       sender: sender._id,
       receiver: receiver._id,
