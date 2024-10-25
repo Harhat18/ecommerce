@@ -237,15 +237,15 @@ export const deleteConnection = async (
   }
 };
 
-export const getUserConnections = async (
+export const getMyConnections = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { userId } = req.params;
+    const { phoneNumber } = req.params;
 
     const userConnections = await MyConnection.findOne({
-      user: userId,
+      phoneNumber,
     }).populate('connections', 'phoneNumber');
 
     if (!userConnections) {

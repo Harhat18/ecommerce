@@ -5,15 +5,25 @@ interface IMyConnection extends Document {
   connections: Schema.Types.ObjectId[];
 }
 
-const myConnectionsSchema = new Schema<IMyConnection>({
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true,
+const myConnectionsSchema = new Schema<IMyConnection>(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+    },
+    connections: [
+      { type: Schema.Types.ObjectId, ref: 'User' },
+      {
+        timestamps: true,
+      },
+    ],
   },
-  connections: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-});
+  {
+    timestamps: true,
+  }
+);
 
 export const MyConnection = mongoose.model<IMyConnection>(
   'MyConnection',
