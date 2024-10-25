@@ -2,7 +2,7 @@ import express from 'express';
 
 import { verifyToken } from '../middleware/verifyToken';
 import {
-  deleteConfirmedConnection,
+  deleteConfirmConnection,
   deleteConnection,
   getConfirmedConnections,
   getConnectionRequests,
@@ -30,7 +30,7 @@ router.get(
 router.delete(
   '/deleteConfirmedConnection',
   verifyToken,
-  deleteConfirmedConnection
+  deleteConfirmConnection
 );
 
 export default router;

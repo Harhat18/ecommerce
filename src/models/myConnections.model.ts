@@ -1,27 +1,27 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface Connection {
-  userId: mongoose.Types.ObjectId;
-  phoneNumber: string;
+interface IMyConnection extends Document {
+  user: Schema.Types.ObjectId;
+  connections: Schema.Types.ObjectId[];
 }
 
-interface MyConnectionDocument extends Document {
-  user: mongoose.Types.ObjectId;
-  connections: Connection[];
-}
-
-const myConnectionSchema = new Schema<MyConnectionDocument>({
-  user: { type: Schema.Types.ObjectId, ref: 'Users', required: true },
-  connections: [
-    {
-      userId: { type: Schema.Types.ObjectId, ref: 'Users', required: true },
-      phoneNumber: { type: String, required: true },
+const myConnectionsSchema = new Schema<IMyConnection>(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'Users',
+      required: true,
+      unique: true,
     },
-  ],
-});
+    connections: [{ type: Schema.Types.ObjectId, ref: 'Users' }],
+  },
+  {
+    timestamps: true,
+  }
+);
 
-export const MyConnection = mongoose.model<MyConnectionDocument>(
+export const MyConnection = mongoose.model<IMyConnection>(
   'MyConnection',
-  myConnectionSchema,
+  myConnectionsSchema,
   'myConnection'
 );

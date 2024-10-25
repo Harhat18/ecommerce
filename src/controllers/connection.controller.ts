@@ -284,53 +284,42 @@ export const getConfirmedConnections = async (
   }
 };
 
-export const deleteConfirmedConnection = async (
+export const deleteConfirmConnection = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { phoneNumber, userPhoneNumber } = req.body;
+    const { connectionId, phoneNumber } = req.body;
 
-    // Kullanıcıyı bul
-    const user = await User.findOne({ phoneNumber: userPhoneNumber });
+    // Kullanıcıyı telefon numarası ile bul
+    const user = await User.findOne({ phoneNumber });
     if (!user) {
-      res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
+      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
       return;
     }
 
-    // Onaylanan bağlantıları al
-    const confirmedConnections = await MyConnection.findOne({ user: user._id })
-      .populate('connections', 'phoneNumber')
-      .exec();
-
-    if (
-      !confirmedConnections ||
-      confirmedConnections.connections.length === 0
-    ) {
-      res.status(200).json({ message: 'Onaylanan bağlantı bulunamadı' });
+    // Kullanıcının bağlantı belgesini bul
+    const userConnections = await MyConnection.findOne({ user: user._id });
+    if (!userConnections) {
+      res.status(404).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
-    // Silinmek istenen telefon numarasına göre bağlantıyı bul
-    const connectionIndex = confirmedConnections.connections.findIndex(
-      (conn: any) => conn.phoneNumber === phoneNumber
-    );
-
-    if (connectionIndex === -1) {
-      res.status(200).json({ message: 'Bağlantı bulunamadı' });
+    // Bağlantı ID'sinin connections dizisinde olup olmadığını kontrol et
+    const index = userConnections.connections.indexOf(connectionId);
+    if (index === -1) {
+      res.status(404).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
-    // Bağlantıyı sil ve değişiklikleri kaydet
-    confirmedConnections.connections.splice(connectionIndex, 1);
-    await confirmedConnections.save();
+    // Bağlantı ID'sini connections dizisinden kaldır
+    userConnections.connections.splice(index, 1);
 
-    res.status(200).json({
-      message: 'Bağlantı başarıyla silindi',
-      connections: confirmedConnections.connections,
-    });
+    // Güncellenmiş belgeyi kaydet
+    await userConnections.save();
+
+    res.status(200).json({ message: 'Bağlantı silindi' });
   } catch (error) {
-    console.error('Error deleting confirmed connection:', error);
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
 };
