@@ -4,7 +4,6 @@ import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
 import { io } from '../..';
 import { MyConnection } from '../models/myConnections.model';
-import { log } from 'console';
 
 export const sendConnectionRequest = async (
   req: Request,
@@ -92,27 +91,22 @@ export const respondToRequest = async (
     const receiver = request.receiver as any;
 
     if (action === 'accept') {
-      // Gönderici ve alıcı için bağlantı listelerini bul
       let senderConnections = await MyConnection.findOne({ user: sender._id });
       let receiverConnections = await MyConnection.findOne({
         user: receiver._id,
       });
-
-      // Eğer senderConnections yoksa, yeni bir doküman oluştur
       if (!senderConnections) {
         senderConnections = new MyConnection({
           user: sender._id,
           connections: [],
         });
       }
-      // Eğer receiverConnections yoksa, yeni bir doküman oluştur
       if (!receiverConnections) {
         receiverConnections = new MyConnection({
           user: receiver._id,
           connections: [],
         });
       }
-      // Bağlantı sayısı kontrolü (8 adet ile sınırlı)
       if (
         senderConnections.connections.length >= 8 ||
         receiverConnections.connections.length >= 8
@@ -144,7 +138,6 @@ export const respondToRequest = async (
       res.status(400).json({ errMessage: 'Geçersiz işlem' });
     }
 
-    // Socket Bildirimleri
     if (sender?.socketId) {
       io.to(sender.socketId).emit('requestResponse', {
         message: `Bağlantı isteğiniz ${
@@ -291,32 +284,38 @@ export const deleteConfirmConnection = async (
   try {
     const { connectionId, phoneNumber } = req.body;
 
-    // Kullanıcıyı telefon numarası ile bul
     const user = await User.findOne({ phoneNumber });
     if (!user) {
       res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
       return;
     }
 
-    // Kullanıcının bağlantı belgesini bul
     const userConnections = await MyConnection.findOne({ user: user._id });
     if (!userConnections) {
       res.status(404).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
-    // Bağlantı ID'sinin connections dizisinde olup olmadığını kontrol et
     const index = userConnections.connections.indexOf(connectionId);
     if (index === -1) {
       res.status(404).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
-    // Bağlantı ID'sini connections dizisinden kaldır
     userConnections.connections.splice(index, 1);
 
-    // Güncellenmiş belgeyi kaydet
     await userConnections.save();
+
+    const otherConnection = await MyConnection.findOne({
+      user: connectionId,
+    });
+    if (otherConnection) {
+      const otherIndex = otherConnection.connections.indexOf(user._id as any);
+      if (otherIndex !== -1) {
+        otherConnection.connections.splice(otherIndex, 1);
+        await otherConnection.save();
+      }
+    }
 
     res.status(200).json({ message: 'Bağlantı silindi' });
   } catch (error) {
