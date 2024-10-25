@@ -283,3 +283,49 @@ export const getConfirmedConnections = async (
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
 };
+
+export const deleteConfirmedConnection = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { phoneNumber, userPhoneNumber } = req.body;
+
+    const user = await User.findOne({ phoneNumber: userPhoneNumber });
+    if (!user) {
+      res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
+      return;
+    }
+
+    const confirmedConnections = await MyConnection.findOne({ user: user._id });
+    if (
+      !confirmedConnections ||
+      confirmedConnections.connections.length === 0
+    ) {
+      res.status(200).json({ message: 'Onaylanan bağlantı bulunamadı' });
+      return;
+    }
+
+    // Silinmek istenen telefon numarasını bul
+    const connectionIndex = confirmedConnections.connections.findIndex(
+      (conn: any) => conn.phoneNumber === phoneNumber
+    );
+
+    if (connectionIndex === -1) {
+      res.status(200).json({ message: 'Bağlantı bulunamadı' });
+      return;
+    }
+
+    // Bağlantıyı sil
+    confirmedConnections.connections.splice(connectionIndex, 1);
+    await confirmedConnections.save(); // Değişiklikleri kaydet
+
+    res.status(200).json({
+      message: 'Bağlantı başarıyla silindi',
+      connections: confirmedConnections.connections,
+    });
+  } catch (error) {
+    console.error('Error deleting confirmed connection:', error);
+    res.status(500).json({ errMessage: 'Sunucu hatası', error });
+  }
+};

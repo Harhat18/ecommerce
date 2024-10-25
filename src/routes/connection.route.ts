@@ -2,6 +2,7 @@ import express from 'express';
 
 import { verifyToken } from '../middleware/verifyToken';
 import {
+  deleteConfirmedConnection,
   deleteConnection,
   getConfirmedConnections,
   getConnectionRequests,
@@ -25,6 +26,11 @@ router.get(
   '/getConfirmedConnections/:phoneNumber',
   verifyToken,
   getConfirmedConnections
+);
+router.delete(
+  '/deleteConfirmedConnection',
+  verifyToken,
+  deleteConfirmedConnection
 );
 
 export default router;
