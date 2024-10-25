@@ -123,11 +123,6 @@ export const respondToRequest = async (
 
       await ConnectionRequest.findByIdAndDelete(requestId);
 
-      if (receiver?.socketId)
-        io.to(receiver?.socketId).emit('connectionRequest', {
-          message: 'Bağlantı isteğiniz kabul edildi.',
-        });
-
       res.status(200).json({
         message:
           'Bağlantı kabul edildi ve her iki kullanıcının bağlantılarına eklendi',
@@ -138,16 +133,7 @@ export const respondToRequest = async (
       });
     } else if (action === 'reject') {
       await ConnectionRequest.findByIdAndDelete(requestId);
-
-      if (receiver?.socketId)
-        io.to(receiver?.socketId).emit('connectionRequest', {
-          message: 'Bağlantı isteğiniz reddedildi.',
-        });
       res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
-      if (receiver?.socketId)
-        io.to(receiver?.socketId).emit('connectionRequest', {
-          message: 'Yeni bağlantı isteği aldınız',
-        });
     } else {
       res.status(200).json({ errMessage: 'Geçersiz işlem' });
     }
@@ -243,34 +229,13 @@ export const deleteConnection = async (
   try {
     const { connectionId } = req.body;
 
-    const connection = await ConnectionRequest.findById(connectionId)
-      .populate('receiver', 'socketId')
-      .populate('sender', 'socketId');
-
-    console.log('connection', connection);
-
+    const connection = await ConnectionRequest.findById(connectionId);
     if (!connection) {
       res.status(200).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
-    const receiver = connection.receiver as any;
-    const sender = connection.sender as any;
-
     await ConnectionRequest.findByIdAndDelete(connectionId);
-
-    if (receiver?.socketId) {
-      io.to(receiver.socketId).emit('requestResponse', {
-        message: 'Bir bağlantınız silindi',
-      });
-    }
-
-    if (sender?.socketId) {
-      io.to(sender.socketId).emit('requestResponse', {
-        message: 'Bağlantınız silindi',
-      });
-    }
-
     res.status(201).json({ message: 'Bağlantı silindi' });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
@@ -350,12 +315,6 @@ export const deleteConfirmConnection = async (
         otherConnection.connections.splice(otherIndex, 1);
         await otherConnection.save();
       }
-    }
-    const receiverUser = await User.findById(connectionId);
-    if (receiverUser?.socketId) {
-      io.to(receiverUser.socketId).emit('requestResponse', {
-        message: 'Bir bağlantı isteğiniz kaldırıldı',
-      });
     }
 
     res.status(200).json({ message: 'Bağlantı silindi' });
