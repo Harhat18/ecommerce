@@ -9,16 +9,11 @@ const myConnectionsSchema = new Schema<IMyConnection>(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Users',
       required: true,
       unique: true,
     },
-    connections: [
-      { type: Schema.Types.ObjectId, ref: 'User' },
-      {
-        timestamps: true,
-      },
-    ],
+    connections: [{ type: Schema.Types.ObjectId, ref: 'Users' }],
   },
   {
     timestamps: true,

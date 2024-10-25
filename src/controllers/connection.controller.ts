@@ -4,6 +4,7 @@ import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
 import { io } from '../..';
 import { MyConnection } from '../models/myConnections.model';
+import { log } from 'console';
 
 export const sendConnectionRequest = async (
   req: Request,
@@ -237,29 +238,37 @@ export const deleteConnection = async (
   }
 };
 
-export const getMyConnections = async (
+export const getConfirmedConnections = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const { phoneNumber } = req.params;
 
-    const userConnections = await MyConnection.findOne({
-      phoneNumber,
-    }).populate('connections', 'phoneNumber');
+    const user = await User.findOne({ phoneNumber });
+    if (!user) {
+      res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
+      return;
+    }
 
-    if (!userConnections) {
-      res
-        .status(404)
-        .json({ errMessage: 'Kullanıcının bağlantısı bulunamadı' });
+    const confirmedConnections = await MyConnection.findOne({ user: user._id })
+      .populate('connections', 'phoneNumber')
+      .exec();
+
+    if (
+      !confirmedConnections ||
+      confirmedConnections.connections.length === 0
+    ) {
+      res.status(200).json({ message: 'Onaylanan bağlantı bulunamadı' });
       return;
     }
 
     res.status(200).json({
-      message: 'Kullanıcının bağlantıları',
-      connections: userConnections.connections,
+      message: 'Onaylanan bağlantılar',
+      connections: confirmedConnections.connections,
     });
   } catch (error) {
+    console.error('Error fetching confirmed connections:', error);
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
 };
