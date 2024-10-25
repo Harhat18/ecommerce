@@ -291,13 +291,18 @@ export const deleteConfirmedConnection = async (
   try {
     const { phoneNumber, userPhoneNumber } = req.body;
 
+    // Kullanıcıyı bul
     const user = await User.findOne({ phoneNumber: userPhoneNumber });
     if (!user) {
       res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
       return;
     }
 
-    const confirmedConnections = await MyConnection.findOne({ user: user._id });
+    // Onaylanan bağlantıları al
+    const confirmedConnections = await MyConnection.findOne({ user: user._id })
+      .populate('connections', 'phoneNumber')
+      .exec();
+
     if (
       !confirmedConnections ||
       confirmedConnections.connections.length === 0
@@ -306,7 +311,7 @@ export const deleteConfirmedConnection = async (
       return;
     }
 
-    // Silinmek istenen telefon numarasını bul
+    // Silinmek istenen telefon numarasına göre bağlantıyı bul
     const connectionIndex = confirmedConnections.connections.findIndex(
       (conn: any) => conn.phoneNumber === phoneNumber
     );
@@ -316,9 +321,9 @@ export const deleteConfirmedConnection = async (
       return;
     }
 
-    // Bağlantıyı sil
+    // Bağlantıyı sil ve değişiklikleri kaydet
     confirmedConnections.connections.splice(connectionIndex, 1);
-    await confirmedConnections.save(); // Değişiklikleri kaydet
+    await confirmedConnections.save();
 
     res.status(200).json({
       message: 'Bağlantı başarıyla silindi',
