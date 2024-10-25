@@ -255,12 +255,19 @@ export const deleteConnection = async (
     }
 
     const receiver = connection.receiver as any;
+    const sender = connection.sender as any;
 
     await ConnectionRequest.findByIdAndDelete(connectionId);
 
     if (receiver?.socketId) {
       io.to(receiver.socketId).emit('requestResponse', {
-        message: 'Bir bağlantınız isteğiniz silindi',
+        message: 'Bir bağlantınız silindi',
+      });
+    }
+
+    if (sender?.socketId) {
+      io.to(sender.socketId).emit('requestResponse', {
+        message: 'Bağlantınız silindi',
       });
     }
 
