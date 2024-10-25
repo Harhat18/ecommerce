@@ -83,7 +83,7 @@ export const respondToRequest = async (
       .populate('receiver', 'phoneNumber');
 
     if (!request) {
-      res.status(404).json({ errMessage: 'İstek bulunamadı' });
+      res.status(200).json({ errMessage: 'İstek bulunamadı' });
       return;
     }
 
@@ -111,7 +111,7 @@ export const respondToRequest = async (
         senderConnections.connections.length >= 8 ||
         receiverConnections.connections.length >= 8
       ) {
-        res.status(400).json({ errMessage: 'Bağlantı sınırına ulaşıldı' });
+        res.status(200).json({ errMessage: 'Bağlantı sınırına ulaşıldı' });
         return;
       }
 
@@ -123,6 +123,11 @@ export const respondToRequest = async (
 
       await ConnectionRequest.findByIdAndDelete(requestId);
 
+      if (receiver?.socketId)
+        io.to(receiver?.socketId).emit('connectionRequest', {
+          message: 'Bağlantı isteğiniz kabul edildi.',
+        });
+
       res.status(200).json({
         message:
           'Bağlantı kabul edildi ve her iki kullanıcının bağlantılarına eklendi',
@@ -133,9 +138,18 @@ export const respondToRequest = async (
       });
     } else if (action === 'reject') {
       await ConnectionRequest.findByIdAndDelete(requestId);
+
+      if (receiver?.socketId)
+        io.to(receiver?.socketId).emit('connectionRequest', {
+          message: 'Bağlantı isteğiniz reddedildi.',
+        });
       res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
+      if (receiver?.socketId)
+        io.to(receiver?.socketId).emit('connectionRequest', {
+          message: 'Yeni bağlantı isteği aldınız',
+        });
     } else {
-      res.status(400).json({ errMessage: 'Geçersiz işlem' });
+      res.status(200).json({ errMessage: 'Geçersiz işlem' });
     }
 
     if (sender?.socketId) {
@@ -169,7 +183,7 @@ export const getConnectionRequests = async (
 
     const user = await User.findOne({ phoneNumber });
     if (!user) {
-      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
+      res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
       return;
     }
 
@@ -199,7 +213,7 @@ export const getSentConnection = async (
 
     const user = await User.findOne({ phoneNumber });
     if (!user) {
-      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
+      res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
       return;
     }
 
@@ -229,13 +243,27 @@ export const deleteConnection = async (
   try {
     const { connectionId } = req.body;
 
-    const connection = await ConnectionRequest.findById(connectionId);
+    const connection = await ConnectionRequest.findById(connectionId)
+      .populate('receiver', 'socketId')
+      .populate('sender', 'socketId');
+
+    console.log('connection', connection);
+
     if (!connection) {
       res.status(200).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
+    const receiver = connection.receiver as any;
+
     await ConnectionRequest.findByIdAndDelete(connectionId);
+
+    if (receiver?.socketId) {
+      io.to(receiver.socketId).emit('requestResponse', {
+        message: 'Bir bağlantınız isteğiniz silindi',
+      });
+    }
+
     res.status(201).json({ message: 'Bağlantı silindi' });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
@@ -286,19 +314,19 @@ export const deleteConfirmConnection = async (
 
     const user = await User.findOne({ phoneNumber });
     if (!user) {
-      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
+      res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
       return;
     }
 
     const userConnections = await MyConnection.findOne({ user: user._id });
     if (!userConnections) {
-      res.status(404).json({ errMessage: 'Bağlantı bulunamadı' });
+      res.status(200).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
     const index = userConnections.connections.indexOf(connectionId);
     if (index === -1) {
-      res.status(404).json({ errMessage: 'Bağlantı bulunamadı' });
+      res.status(200).json({ errMessage: 'Bağlantı bulunamadı' });
       return;
     }
 
@@ -315,6 +343,12 @@ export const deleteConfirmConnection = async (
         otherConnection.connections.splice(otherIndex, 1);
         await otherConnection.save();
       }
+    }
+    const receiverUser = await User.findById(connectionId);
+    if (receiverUser?.socketId) {
+      io.to(receiverUser.socketId).emit('requestResponse', {
+        message: 'Bir bağlantı isteğiniz kaldırıldı',
+      });
     }
 
     res.status(200).json({ message: 'Bağlantı silindi' });
