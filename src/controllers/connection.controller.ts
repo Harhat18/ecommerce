@@ -120,6 +120,7 @@ export const respondToRequest = async (
 
       await senderConnections.save();
       await receiverConnections.save();
+      console.log('receiver?.socketId2', receiver?.socketId);
       if (receiver?.socketId)
         io.to(receiver?.socketId).emit('connectionRequest', {
           message: 'Bağlantı isteğiniz onaylandı',
@@ -135,6 +136,7 @@ export const respondToRequest = async (
         },
       });
     } else if (action === 'reject') {
+      console.log('receiver?.socketId3', receiver?.socketId);
       if (receiver?.socketId)
         io.to(receiver?.socketId).emit('connectionRequest', {
           message: 'Bağlantı isteğiniz reddedildi',
@@ -234,6 +236,8 @@ export const deleteConnection = async (
 
     await ConnectionRequest.findByIdAndDelete(connectionId);
 
+    console.log('receiver?.socketId4', receiver?.socketId);
+
     if (receiver?.socketId) {
       io.to(receiver.socketId).emit('requestResponse', {
         message: 'Bir bağlantı isteginiz silindi',
@@ -325,6 +329,7 @@ export const deleteConfirmConnection = async (
         await otherConnection.save();
       }
     }
+    console.log('otherUser?.socketId', otherUser?.socketId);
     if (otherUser?.socketId) {
       io.to(otherUser.socketId).emit('connectionUpdate', {
         message: 'Bağlantınız silindi',

@@ -15,10 +15,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-});
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+// });
 
 const corsOptions = {
   origin: '*',
@@ -31,7 +31,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(morgan('dev'));
 app.use(helmet());
-app.use(limiter);
+// app.use(limiter);
 
 const server = http.createServer(app);
 export const io = new Server(server, {
