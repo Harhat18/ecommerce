@@ -4,7 +4,7 @@ import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
 import { io } from '../..';
 import { MyConnection } from '../models/myConnections.model';
-import { connections } from '../../';
+import { connections } from '../routes/routes';
 
 export const sendConnectionRequest = async (
   req: Request,
