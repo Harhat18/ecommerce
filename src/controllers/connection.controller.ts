@@ -80,7 +80,7 @@ export const respondToRequest = async (
 
     const request = await ConnectionRequest.findById(requestId)
       .populate('sender', 'phoneNumber')
-      .populate('receiver', 'phoneNumber');
+      .populate('receiver', 'phoneNumber socketId');
 
     if (!request) {
       res.status(200).json({ errMessage: 'İstek bulunamadı' });
@@ -89,7 +89,7 @@ export const respondToRequest = async (
 
     const sender = request.sender as any;
     const receiver = request.receiver as any;
-
+    console.log('receiver', receiver);
     if (action === 'accept') {
       let senderConnections = await MyConnection.findOne({ user: sender._id });
       let receiverConnections = await MyConnection.findOne({
@@ -331,7 +331,7 @@ export const deleteConfirmConnection = async (
     }
     console.log('otherUser?.socketId', otherUser?.socketId);
     if (otherUser?.socketId) {
-      io.to(otherUser.socketId).emit('connectionUpdate', {
+      io.to(otherUser.socketId).emit('requestResponse', {
         message: 'Bağlantınız silindi',
       });
     }
