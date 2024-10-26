@@ -10,6 +10,7 @@ import cors from 'cors';
 import http from 'http';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { log } from 'console';
 
 const app = express();
 app.use(express.json());
@@ -41,6 +42,23 @@ export const io = new Server(server, {
 });
 
 app.use('/', routes);
+
+export const connections: { [key: string]: any } = {};
+console.log(connections);
+
+app.get('/sse/:phoneNumber', (req, res) => {
+  const phoneNumber = req.params.phoneNumber;
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  connections[phoneNumber] = res;
+
+  req.on('close', () => {
+    delete connections[phoneNumber];
+  });
+});
 
 const PORT = process.env.PORT || 4000;
 

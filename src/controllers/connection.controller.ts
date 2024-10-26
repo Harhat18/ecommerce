@@ -4,6 +4,7 @@ import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
 import { io } from '../..';
 import { MyConnection } from '../models/myConnections.model';
+import { connections } from '../../';
 
 export const sendConnectionRequest = async (
   req: Request,
@@ -55,14 +56,16 @@ export const sendConnectionRequest = async (
     });
 
     await newRequest.save();
-
-    console.log('receiver?.socketId', receiver?.socketId);
-
-    if (receiver?.socketId)
-      io.to(receiver?.socketId).emit('connectionRequest', {
-        message: 'Yeni bağlantı isteği aldınız',
-        request: newRequest,
-      });
+    console.log('bbb');
+    if (connections[receiverPhoneNumber]) {
+      connections[receiverPhoneNumber].write(
+        `data: ${JSON.stringify({
+          message: 'Yeni bağlantı isteği aldınız',
+          request: newRequest,
+        })}\n\n`
+      );
+      console.log('aaa');
+    }
     res
       .status(201)
       .json({ message: 'Bağlantı isteği gönderildi', request: newRequest });
