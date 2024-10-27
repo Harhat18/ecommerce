@@ -9,8 +9,6 @@ import helmet from 'helmet';
 import cors from 'cors';
 import http from 'http';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
-import { log } from 'console';
 
 const app = express();
 app.use(express.json());
@@ -42,6 +40,30 @@ export const io = new Server(server, {
 });
 
 app.use('/', routes);
+
+type Client = {
+  phoneNumber: string;
+  res: express.Response;
+};
+
+export let clients: Client[] = [];
+
+app.get('/events/:phoneNumber', (req, res) => {
+  const phoneNumber = req.params.phoneNumber as string;
+  console.log('phoneNumber', phoneNumber);
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  // Yeni istemciyi listeye ekle
+  clients.push({ phoneNumber, res });
+  // İstemci bağlantısı kesildiğinde listeden kaldır
+  req.on('close', () => {
+    clients = clients.filter((client) => client.res !== res);
+    res.end();
+  });
+});
 
 const PORT = process.env.PORT || 4000;
 

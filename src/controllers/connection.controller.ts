@@ -2,9 +2,16 @@ import { Request, Response } from 'express';
 
 import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
-import { io } from '../..';
+import { clients, io } from '../..';
 import { MyConnection } from '../models/myConnections.model';
-import { connections } from '../routes/routes';
+
+function sendEventToClient(phoneNumber: string, message: object) {
+  clients
+    .filter((client) => client.phoneNumber === phoneNumber)
+    .forEach((client) =>
+      client.res.write(`data: ${JSON.stringify(message)}\n\n`)
+    );
+}
 
 export const sendConnectionRequest = async (
   req: Request,
@@ -56,16 +63,10 @@ export const sendConnectionRequest = async (
     });
 
     await newRequest.save();
-    console.log('bbb');
-    if (connections[receiverPhoneNumber]) {
-      connections[receiverPhoneNumber].write(
-        `data: ${JSON.stringify({
-          message: 'Yeni bağlantı isteği aldınız',
-          request: newRequest,
-        })}\n\n`
-      );
-      console.log('aaa');
-    }
+
+    const message = { message: 'Bu bir duruma bağlı mesaj!' };
+    sendEventToClient(receiverPhoneNumber, message);
+
     res
       .status(201)
       .json({ message: 'Bağlantı isteği gönderildi', request: newRequest });
