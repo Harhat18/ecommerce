@@ -64,7 +64,7 @@ export const sendConnectionRequest = async (
 
     await newRequest.save();
 
-    const message = { message: 'yeni bir bağlantı isteğiniz var', status: 1 };
+    const message = { message: 'Yeni bir bağlantı isteğiniz var', status: 1 };
     sendEventToClient(receiverPhoneNumber, message);
 
     res
@@ -224,9 +224,10 @@ export const deleteConnection = async (
   try {
     const { connectionId } = req.body;
 
-    const connection = await ConnectionRequest.findById(connectionId)
-      .populate('receiver', 'socketId')
-      .populate('sender', 'socketId');
+    const connection = await ConnectionRequest.findById(connectionId).populate(
+      'receiver',
+      'phoneNumber'
+    );
 
     console.log('connection', connection);
 
@@ -236,23 +237,11 @@ export const deleteConnection = async (
     }
 
     const receiver = connection.receiver as any;
-    const sender = connection.sender as any;
 
     await ConnectionRequest.findByIdAndDelete(connectionId);
 
-    console.log('receiver?.socketId4', receiver?.socketId);
-
-    if (receiver?.socketId) {
-      io.to(receiver.socketId).emit('requestResponse', {
-        message: 'Bir bağlantı isteginiz silindi',
-      });
-    }
-
-    // if (sender?.socketId) {
-    //   io.to(sender.socketId).emit('requestResponse', {
-    //     message: 'Bağlantınız silindi',
-    //   });
-    // }
+    const message = { message: 'Yeni bir bağlantı isteğiniz var', status: 2 };
+    sendEventToClient(receiver.phoneNumber, message);
 
     res.status(201).json({ message: 'Bağlantı silindi' });
   } catch (error) {
