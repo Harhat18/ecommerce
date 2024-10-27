@@ -238,10 +238,10 @@ export const deleteConnection = async (
 
     const receiver = connection.receiver as any;
 
-    await ConnectionRequest.findByIdAndDelete(connectionId);
-
-    const message = { message: 'Yeni bir bağlantı isteğiniz var', status: 2 };
+    const message = { message: 'Bir bağlantı isteğiniz silindi', status: 2 };
     sendEventToClient(receiver.phoneNumber, message);
+
+    await ConnectionRequest.findByIdAndDelete(connectionId);
 
     res.status(201).json({ message: 'Bağlantı silindi' });
   } catch (error) {
