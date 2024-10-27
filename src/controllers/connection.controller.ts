@@ -84,7 +84,7 @@ export const respondToRequest = async (
 
     const request = await ConnectionRequest.findById(requestId)
       .populate('sender', 'phoneNumber')
-      .populate('receiver', 'phoneNumber socketId');
+      .populate('receiver', 'phoneNumber');
 
     if (!request) {
       res.status(200).json({ errMessage: 'İstek bulunamadı' });
@@ -124,11 +124,11 @@ export const respondToRequest = async (
 
       await senderConnections.save();
       await receiverConnections.save();
-      console.log('receiver?.socketId2', receiver?.socketId);
-      if (receiver?.socketId)
-        io.to(receiver?.socketId).emit('connectionRequest', {
-          message: 'Bağlantı isteğiniz onaylandı',
-        });
+      const message = {
+        message: 'Bir bağlantı isteğiniz onaylandı',
+        status: 3,
+      };
+      sendEventToClient(receiver.phoneNumber, message);
       await ConnectionRequest.findByIdAndDelete(requestId);
 
       res.status(200).json({
@@ -140,11 +140,11 @@ export const respondToRequest = async (
         },
       });
     } else if (action === 'reject') {
-      console.log('receiver?.socketId3', receiver?.socketId);
-      if (receiver?.socketId)
-        io.to(receiver?.socketId).emit('connectionRequest', {
-          message: 'Bağlantı isteğiniz reddedildi',
-        });
+      const message = {
+        message: 'Bir bağlantı isteğiniz reddedildi',
+        status: 3,
+      };
+      sendEventToClient(receiver.phoneNumber, message);
       await ConnectionRequest.findByIdAndDelete(requestId);
       res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
     } else {
@@ -291,7 +291,7 @@ export const deleteConfirmConnection = async (
   try {
     const { connectionId, phoneNumber } = req.body;
 
-    const user = await User.findOne({ phoneNumber }).populate('socketId');
+    const user = await User.findOne({ phoneNumber });
     if (!user) {
       res.status(200).json({ errMessage: 'Kullanıcı bulunamadı' });
       return;
@@ -312,7 +312,7 @@ export const deleteConfirmConnection = async (
     userConnections.connections.splice(index, 1);
     await userConnections.save();
 
-    const otherUser = await User.findById(connectionId).populate('socketId');
+    const otherUser = await User.findById(connectionId).populate('phoneNumber');
     const otherConnection = await MyConnection.findOne({ user: connectionId });
 
     if (otherConnection) {
@@ -322,11 +322,11 @@ export const deleteConfirmConnection = async (
         await otherConnection.save();
       }
     }
-    console.log('otherUser?.socketId', otherUser?.socketId);
-    if (otherUser?.socketId) {
-      io.to(otherUser.socketId).emit('requestResponse', {
-        message: 'Bağlantınız silindi',
-      });
+    console.log('otherUser?.phoneNumber', otherUser?.phoneNumber);
+
+    if (otherUser) {
+      const message = { message: 'Bir bağlantı isteğiniz silindi', status: 2 };
+      sendEventToClient(otherUser.phoneNumber, message);
     }
     res.status(200).json({ message: 'Bağlantı silindi' });
   } catch (error) {
