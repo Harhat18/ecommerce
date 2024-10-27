@@ -64,7 +64,7 @@ export const sendConnectionRequest = async (
 
     await newRequest.save();
 
-    const message = { message: 'Bu bir duruma bağlı mesaj!' };
+    const message = { message: 'yeni bir bağlantı isteğiniz var' };
     sendEventToClient(receiverPhoneNumber, message);
 
     res
