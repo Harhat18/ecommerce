@@ -50,15 +50,12 @@ export let clients: Client[] = [];
 
 app.get('/events/:phoneNumber', (req, res) => {
   const phoneNumber = req.params.phoneNumber as string;
-  console.log('phoneNumber', phoneNumber);
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
-  // Yeni istemciyi listeye ekle
   clients.push({ phoneNumber, res });
-  // İstemci bağlantısı kesildiğinde listeden kaldır
   req.on('close', () => {
     clients = clients.filter((client) => client.res !== res);
     res.end();
