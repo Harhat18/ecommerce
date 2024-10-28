@@ -314,7 +314,6 @@ export const deleteConfirmConnection = async (
     userConnections.connections.splice(index, 1);
     await userConnections.save();
 
-    const otherUser = await User.findById(connectionId).populate('phoneNumber');
     const otherConnection = await MyConnection.findOne({ user: connectionId });
 
     if (otherConnection) {
@@ -324,12 +323,10 @@ export const deleteConfirmConnection = async (
         await otherConnection.save();
       }
     }
-    console.log('otherUser', otherUser?.phoneNumber);
 
-    if (otherUser) {
-      const message = { message: 'Bir bağlantı isteğiniz silindi', status: 2 };
-      sendEventToClient(otherUser.phoneNumber, message);
-    }
+    const message = { message: 'Bir bağlantı isteğiniz silindi', status: 2 };
+    sendEventToClient(phoneNumber, message);
+
     res.status(200).json({ message: 'Bağlantı silindi' });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
