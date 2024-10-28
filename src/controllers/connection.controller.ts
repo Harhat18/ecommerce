@@ -93,7 +93,6 @@ export const respondToRequest = async (
 
     const sender = request.sender as any;
     const receiver = request.receiver as any;
-    console.log('receiver', receiver);
     if (action === 'accept') {
       let senderConnections = await MyConnection.findOne({ user: sender._id });
       let receiverConnections = await MyConnection.findOne({
@@ -124,11 +123,14 @@ export const respondToRequest = async (
 
       await senderConnections.save();
       await receiverConnections.save();
+
       const message = {
         message: 'Bir bağlantı isteğiniz onaylandı',
         status: 3,
       };
-      sendEventToClient(receiver.phoneNumber, message);
+
+      sendEventToClient(sender.phoneNumber, message);
+      console.log('receiver.phoneNumber', receiver.phoneNumber);
       await ConnectionRequest.findByIdAndDelete(requestId);
 
       res.status(200).json({
@@ -144,7 +146,9 @@ export const respondToRequest = async (
         message: 'Bir bağlantı isteğiniz reddedildi',
         status: 3,
       };
-      sendEventToClient(receiver.phoneNumber, message);
+      console.log('receiver.phoneNumber2', receiver.phoneNumber);
+
+      sendEventToClient(sender.phoneNumber, message);
       await ConnectionRequest.findByIdAndDelete(requestId);
       res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
     } else {
@@ -228,8 +232,6 @@ export const deleteConnection = async (
       'receiver',
       'phoneNumber'
     );
-
-    console.log('connection', connection);
 
     if (!connection) {
       res.status(200).json({ errMessage: 'Bağlantı bulunamadı' });
@@ -322,7 +324,7 @@ export const deleteConfirmConnection = async (
         await otherConnection.save();
       }
     }
-    console.log('otherUser?.phoneNumber', otherUser?.phoneNumber);
+    console.log('otherUser', otherUser?.phoneNumber);
 
     if (otherUser) {
       const message = { message: 'Bir bağlantı isteğiniz silindi', status: 2 };
