@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
-import { clients } from '../..';
+import { clients, io } from '../..';
 import { MyConnection } from '../models/myConnections.model';
 
 function sendEventToClient(phoneNumber: string, message: object) {
@@ -338,6 +338,44 @@ export const deleteConfirmConnection = async (
       sendEventToClient(otherUser.phoneNumber, message);
     }
     res.status(200).json({ message: 'Bağlantı silindi' });
+  } catch (error) {
+    res.status(500).json({ errMessage: 'Sunucu hatası', error });
+  }
+};
+
+export const updateUserLocation = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { phoneNumber, location } = req.body;
+
+    const user = await User.findOne({ phoneNumber });
+    if (!user) {
+      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
+      return;
+    }
+
+    // Update the user's location
+    user.location = location;
+    await user.save();
+
+    // Fetch the user's connections
+    const confirmedConnections = await MyConnection.findOne({ user: user._id })
+      .populate('connections', 'phoneNumber')
+      .exec();
+
+    if (confirmedConnections && confirmedConnections.connections.length > 0) {
+      // Broadcast the location update to each connection
+      confirmedConnections.connections.forEach((connection: any) => {
+        io.to(connection.phoneNumber).emit('locationUpdate', {
+          phoneNumber: user.phoneNumber,
+          location,
+        });
+      });
+    }
+
+    res.status(200).json({ message: 'Konum güncellendi' });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
