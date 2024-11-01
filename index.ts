@@ -39,18 +39,6 @@ export const io = new Server(server, {
   },
 });
 
-io.on('connection', (socket) => {
-  console.log('Yeni bir kullanıcı bağlandı');
-
-  socket.on('register', (phoneNumber: string) => {
-    socket.join(phoneNumber);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Kullanıcı bağlantısı kesildi');
-  });
-});
-
 app.use('/', routes);
 
 type Client = {

@@ -366,16 +366,17 @@ export const updateUserLocation = async (
       .exec();
 
     if (confirmedConnections && confirmedConnections.connections.length > 0) {
-      // Broadcast the location update to each connection
       confirmedConnections.connections.forEach((connection: any) => {
-        io.to(connection.phoneNumber).emit('locationUpdate', {
+        const message = {
+          msj: `konumum değişti ${user.phoneNumber}`,
           phoneNumber: user.phoneNumber,
           location,
-        });
+        };
+        sendEventToClient(connection.phoneNumber, message);
       });
     }
 
-    res.status(200).json({ message: 'Konum güncellendi' });
+    res.status(200).json({ message: 'Konum güncellendi', location });
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });
   }
