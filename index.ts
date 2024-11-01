@@ -48,6 +48,10 @@ type Client = {
 
 export let clients: Client[] = [];
 
+clients.forEach((client) => {
+  console.log(client.phoneNumber);
+});
+
 app.get('/events/:phoneNumber', (req, res) => {
   const phoneNumber = req.params.phoneNumber as string;
 

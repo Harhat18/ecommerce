@@ -356,23 +356,24 @@ export const updateUserLocation = async (
       return;
     }
 
-    // Update the user's location
     user.location = location;
     await user.save();
 
-    // Fetch the user's connections
     const confirmedConnections = await MyConnection.findOne({ user: user._id })
       .populate('connections', 'phoneNumber')
       .exec();
 
     if (confirmedConnections && confirmedConnections.connections.length > 0) {
+      console.log('içerdeyim');
       confirmedConnections.connections.forEach((connection: any) => {
         const message = {
           msj: `konumum değişti ${user.phoneNumber}`,
           phoneNumber: user.phoneNumber,
           location,
         };
+        console.log('message', message);
         sendEventToClient(connection.phoneNumber, message);
+        console.log(connection.phoneNumber);
       });
     }
 
