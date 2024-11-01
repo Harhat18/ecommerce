@@ -38,8 +38,10 @@ export const updateUserLocation = async (
       confirmedConnections.connections.forEach((connection: any) => {
         const message = {
           message: `konumum değişti ${user.phoneNumber}`,
-          phoneNumber: user.phoneNumber,
-          location,
+          userLocation: {
+            phoneNumber: user.phoneNumber,
+            location,
+          },
         };
 
         console.log(`Sending location update to: ${connection.phoneNumber}`);
