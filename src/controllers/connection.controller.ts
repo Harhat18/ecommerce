@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import { User } from '../models/user.model';
 import { ConnectionRequest } from '../models/connection.model';
-import { clients, io } from '../..';
+import { clients } from '../..';
 import { MyConnection } from '../models/myConnections.model';
 
 function sendEventToClient(phoneNumber: string, message: object) {
@@ -39,6 +39,7 @@ export const sendConnectionRequest = async (
       user: sender._id,
       connections: receiver._id,
     });
+
     if (existingConnection) {
       res
         .status(200)
@@ -47,13 +48,17 @@ export const sendConnectionRequest = async (
     }
 
     const existingRequest = await ConnectionRequest.findOne({
-      sender: sender._id,
-      receiver: receiver._id,
+      $or: [
+        { sender: sender._id, receiver: receiver._id },
+        { sender: receiver._id, receiver: sender._id },
+      ],
     });
+
     if (existingRequest) {
-      res
-        .status(200)
-        .json({ errMessage: 'Zaten bir istek gönderdiniz', existingRequest });
+      const errMessage = existingRequest.sender.equals(sender._id)
+        ? 'Zaten bir istek gönderdiniz'
+        : 'Karşı taraftan zaten bir istek aldınız';
+      res.status(200).json({ errMessage, existingRequest });
       return;
     }
 
@@ -128,9 +133,10 @@ export const respondToRequest = async (
         message: 'Bir bağlantı isteğiniz onaylandı',
         status: 3,
       };
-
       sendEventToClient(sender.phoneNumber, message);
+
       console.log('receiver.phoneNumber', receiver.phoneNumber);
+
       await ConnectionRequest.findByIdAndDelete(requestId);
 
       res.status(200).json({
@@ -149,10 +155,11 @@ export const respondToRequest = async (
       console.log('receiver.phoneNumber2', receiver.phoneNumber);
 
       sendEventToClient(sender.phoneNumber, message);
+
       await ConnectionRequest.findByIdAndDelete(requestId);
       res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
     } else {
-      res.status(200).json({ errMessage: 'Geçersiz işlem' });
+      res.status(400).json({ errMessage: 'Geçersiz işlem' });
     }
   } catch (error) {
     res.status(500).json({ errMessage: 'Sunucu hatası', error });

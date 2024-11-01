@@ -15,6 +15,10 @@ const userModel = new Schema(
     activeSessionToken: { type: String },
     socketId: { type: String },
     token: { type: String },
+    location: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+    },
   },
   {
     timestamps: true,
