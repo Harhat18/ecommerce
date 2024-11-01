@@ -41,10 +41,14 @@ export const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  const { phoneNumber } = socket.handshake.query;
+  if (typeof phoneNumber !== 'string') return;
+  socket.join(phoneNumber); // Kullanıcının telefon numarasına göre odaya katılma
+
+  console.log('New client connected:', phoneNumber);
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('Client disconnected:', phoneNumber);
   });
 });
 
