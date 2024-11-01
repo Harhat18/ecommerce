@@ -41,7 +41,8 @@ export const updateUserLocation = async (
           phoneNumber: user.phoneNumber,
           location,
         };
-        // sendEventToClient(connection.phoneNumber, message);
+
+        console.log(`Sending location update to: ${connection.phoneNumber}`);
         io.to(connection.phoneNumber).emit('locationUpdate', message);
       });
     }
