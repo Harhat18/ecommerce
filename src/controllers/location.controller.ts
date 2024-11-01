@@ -58,7 +58,7 @@ export const getAllConnectedUsersLocations = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { phoneNumber } = req.body;
+    const { phoneNumber } = req.params;
 
     const user = await User.findOne({ phoneNumber });
     if (!user) {

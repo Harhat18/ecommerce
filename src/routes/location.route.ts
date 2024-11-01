@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post('/sendLocation', verifyToken, updateUserLocation);
 router.get(
-  '/getAllConnectedUsersLocations',
+  '/getAllConnectedUsersLocations/:phoneNumber',
   verifyToken,
   getAllConnectedUsersLocations
 );
