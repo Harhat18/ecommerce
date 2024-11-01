@@ -9,7 +9,6 @@ import {
   getSentConnection,
   respondToRequest,
   sendConnectionRequest,
-  updateUserLocation,
 } from '../controllers/connection.controller';
 
 const router = express.Router();
@@ -33,6 +32,5 @@ router.delete(
   verifyToken,
   deleteConfirmConnection
 );
-router.post('/userLocation', verifyToken, updateUserLocation);
 
 export default router;
