@@ -71,6 +71,7 @@ export const sendConnectionRequest = async (
 
     const message = { message: 'Yeni bir bağlantı isteğiniz var', status: 1 };
     sendEventToClient(receiverPhoneNumber, message);
+    io.to(receiverPhoneNumber).emit('newConnectionRequest', message);
 
     res
       .status(201)
@@ -134,6 +135,7 @@ export const respondToRequest = async (
         status: 3,
       };
       sendEventToClient(sender.phoneNumber, message);
+      io.to(sender.phoneNumber).emit('respondToRequest', message);
 
       console.log('receiver.phoneNumber', receiver.phoneNumber);
 
@@ -155,6 +157,7 @@ export const respondToRequest = async (
       console.log('receiver.phoneNumber2', receiver.phoneNumber);
 
       sendEventToClient(sender.phoneNumber, message);
+      io.to(sender.phoneNumber).emit('respondToRequest', message);
 
       await ConnectionRequest.findByIdAndDelete(requestId);
       res.status(200).json({ message: 'Bağlantı isteği reddedildi' });
@@ -249,6 +252,7 @@ export const deleteConnection = async (
 
     const message = { message: 'Bir bağlantı isteğiniz silindi', status: 2 };
     sendEventToClient(receiver.phoneNumber, message);
+    io.to(receiver.phoneNumber).emit('deleteConnection', message);
 
     await ConnectionRequest.findByIdAndDelete(connectionId);
 
@@ -331,11 +335,11 @@ export const deleteConfirmConnection = async (
         await otherConnection.save();
       }
     }
-    console.log('otherUser', otherUser?.phoneNumber);
 
     if (otherUser) {
       const message = { message: 'Bir bağlantı isteğiniz silindi', status: 2 };
       sendEventToClient(otherUser.phoneNumber, message);
+      io.to(otherUser.phoneNumber).emit('deleteConfirmConnection', message);
     }
     res.status(200).json({ message: 'Bağlantı silindi' });
   } catch (error) {

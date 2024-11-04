@@ -43,7 +43,7 @@ export const io = new Server(server, {
 io.on('connection', (socket) => {
   const { phoneNumber } = socket.handshake.query;
   if (typeof phoneNumber !== 'string') return;
-  socket.join(phoneNumber); // Kullanıcının telefon numarasına göre odaya katılma
+  socket.join(phoneNumber);
 
   console.log('New client connected:', phoneNumber);
 
