@@ -1,7 +1,8 @@
 import jwt, { verify } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/user.model';
-
+import dotenv from 'dotenv';
+dotenv.config();
 interface UserPayload {
   phoneNumber: string;
   isAdmin: boolean;
@@ -27,7 +28,7 @@ export const verifyToken = async (
   const authHeader = req.headers['authorization'] as string | undefined;
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token || (user?.isAdmin && user?.token !== token)) {
+  if (!authHeader || !token) {
     res.status(401).send('Access Denied');
     return;
   }

@@ -276,7 +276,7 @@ export const getConfirmedConnections = async (
     }
 
     const confirmedConnections = await MyConnection.findOne({ user: user._id })
-      .populate('connections', 'phoneNumber')
+      .populate('connections', 'phoneNumber location imageUrl ')
       .exec();
 
     if (

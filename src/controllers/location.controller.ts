@@ -64,7 +64,7 @@ export const getAllConnectedUsersLocations = async (
 
     const user = await User.findOne({ phoneNumber });
     if (!user) {
-      res.status(404).json({ errMessage: 'Kullanıcı bulunamadı' });
+      res.status(201).json({ errMessage: 'kullanıcı bulunamadı' });
       return;
     }
 
@@ -73,7 +73,7 @@ export const getAllConnectedUsersLocations = async (
       .exec();
 
     if (!connections || connections.connections.length === 0) {
-      res.status(404).json({ errMessage: 'Bağlantılı kullanıcı bulunamadı' });
+      res.status(201).json({ errMessage: 'Bağlantılı kullanıcı bulunamadı' });
       return;
     }
 

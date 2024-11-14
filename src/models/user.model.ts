@@ -19,6 +19,8 @@ const userModel = new Schema(
       latitude: { type: Number },
       longitude: { type: Number },
     },
+    imageName: { type: String },
+    imageUrl: { type: String },
   },
   {
     timestamps: true,

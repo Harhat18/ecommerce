@@ -72,9 +72,10 @@ export const verifyCode = async (req: Request, res: Response) => {
       return;
     }
     if (user.deviceId !== deviceId) {
-      if (user.socketId) {
-        io.to(user.socketId).emit('deviceChange', {
+      if (phoneNumber) {
+        io.to(phoneNumber).emit('deviceChange', {
           message: 'Uygulama başka bir cihazda açıldı.',
+          deviceId: deviceId,
         });
         user.deviceId = deviceId;
         user.socketId = socketId;
